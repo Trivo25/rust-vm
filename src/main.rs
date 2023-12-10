@@ -114,8 +114,8 @@ pub fn vm(argc: i32, _argv: Vec<String>) {
             Ok(Instructions::BR) => branch(instruction, &mut registers),
             Ok(Instructions::JMP) => jump(instruction, &mut registers),
             Ok(Instructions::JSR) => jump_register(instruction, &mut registers),
-            Ok(Instructions::LD) => {}
-            Ok(Instructions::LDI) => {}
+            Ok(Instructions::LD) => load(instruction, &mut registers, &memory),
+            Ok(Instructions::LDI) => load_indirect(instruction, &mut registers, &memory),
             Ok(Instructions::LDR) => {}
             Ok(Instructions::LEA) => {}
             Ok(Instructions::ST) => {}
@@ -172,6 +172,30 @@ fn jump_register(instruction: u16, registers: &mut [u16; 10]) {
         let r1 = (instruction >> 6) & 0x7;
         registers[Registers::RProgramCounter as usize] = registers[r1 as usize];
     }
+}
+
+fn load(instruction: u16, registers: &mut [u16; 10], memory: &Memory) {
+    let target_register = (instruction >> 9) & 0x7;
+    let offset = sign_extended(instruction & 0x1FF, 9);
+
+    let address = offset + registers[Registers::RProgramCounter as usize];
+
+    registers[target_register as usize] = memory[address as usize];
+
+    update_flags(target_register, registers)
+}
+
+fn load_indirect(instruction: u16, registers: &mut [u16; 10], memory: &Memory) {
+    let target_register = (instruction >> 9) & 0x7;
+    let offset = sign_extended(instruction & 0x1FF, 9);
+
+    let pc_offset = offset + registers[Registers::RProgramCounter as usize];
+
+    let address = memory[pc_offset as usize];
+
+    registers[target_register as usize] = memory[address as usize];
+
+    update_flags(target_register, registers)
 }
 
 fn sign_extended(x: u16, bit_count: u16) -> u16 {
@@ -285,5 +309,60 @@ mod tests {
             print_registers(&registers);
         }
         assert_eq!(registers[Registers::RProgramCounter as usize], 31);
+    }
+
+    #[test]
+    fn test_load() {
+        let instruction = 0b0010_010_0000000100;
+
+        let mut registers: [u16; 10] = [0; Registers::RTotalCount as usize];
+        let mut memory: [u16; 1 << 16] = [0; 1 << 16];
+
+        registers[Registers::RProgramCounter as usize] = 1 << 8;
+
+        let offset =
+            registers[Registers::RProgramCounter as usize] + sign_extended(0b0000000100, 8);
+
+        memory[offset as usize] = 1 << 15;
+
+        load(instruction, &mut registers, &memory);
+
+        if DEBUG_PRINT {
+            print_registers(&registers);
+        }
+
+        assert_eq!(registers[Registers::R4 as usize], memory[offset as usize]);
+        assert_eq!(
+            registers[Registers::RConditional as usize],
+            ConditionalFlags::Negative as u16
+        );
+    }
+
+    #[test]
+    fn test_load_indirect() {
+        let instruction = 0b0010_010_0000000100;
+
+        let mut registers: [u16; 10] = [0; Registers::RTotalCount as usize];
+        let mut memory: [u16; 1 << 16] = [0; 1 << 16];
+
+        registers[Registers::RProgramCounter as usize] = 1 << 8;
+
+        let pc_offset =
+            registers[Registers::RProgramCounter as usize] + sign_extended(0b0000000100, 8);
+
+        memory[pc_offset as usize] = 1 << 15;
+        memory[memory[pc_offset as usize] as usize] = 1 << 14;
+
+        load_indirect(instruction, &mut registers, &memory);
+
+        if DEBUG_PRINT {
+            print_registers(&registers);
+        }
+
+        assert_eq!(registers[Registers::R4 as usize], memory[1 << 15]);
+        assert_eq!(
+            registers[Registers::RConditional as usize],
+            ConditionalFlags::Positive as u16
+        );
     }
 }
