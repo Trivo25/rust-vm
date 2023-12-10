@@ -1,4 +1,4 @@
-use super::memory::Memory
+use super::memory::Memory;
 use super::registers::Registers;
 
 pub struct VirtualMachine {

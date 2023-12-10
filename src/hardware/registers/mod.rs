@@ -1,3 +1,5 @@
+use super::instructions::conditional_flags::ConditionalFlags;
+
 const PROGRAM_COUNTER_START: u16 = 0x3000;
 
 pub struct Registers {
@@ -49,5 +51,23 @@ impl Registers {
         self.update(8, value)
     }
 
-    pub fn update_cond_flag(&mut self, value: u16) {}
+    pub fn update_cond_flag(&mut self, value: ConditionalFlags) {
+        self.update(9, value as u16)
+    }
+
+    pub fn read(&self, index: u16) -> u16 {
+        match index {
+            0 => self.r0,
+            1 => self.r1,
+            2 => self.r2,
+            3 => self.r3,
+            4 => self.r4,
+            5 => self.r5,
+            6 => self.r6,
+            7 => self.r7,
+            8 => self.pc,
+            9 => self.cond,
+            _ => panic!("Invalid register entry"),
+        }
+    }
 }
