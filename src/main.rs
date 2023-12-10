@@ -1,8 +1,38 @@
-use std::usize;
+use byteorder::{BigEndian, ReadBytesExt};
+
+use std::{
+    fs::File,
+    io::{stdin, BufReader, Read},
+};
 
 const MEMORY_MAX: usize = 1 << 16;
-
 type Memory = [u16; MEMORY_MAX];
+
+enum TrapCodes {
+    TrapGetC = 0x20,
+    TrapOut = 0x21,
+    TrapPuts = 0x22,
+    TrapIn = 0x23,
+    TrapPutsP = 0x24,
+    TrapHalt = 0x25,
+}
+
+impl TryFrom<u16> for TrapCodes {
+    type Error = ();
+
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value {
+            0x20 => Ok(TrapCodes::TrapGetC),
+            0x21 => Ok(TrapCodes::TrapOut),
+            0x22 => Ok(TrapCodes::TrapPuts),
+            0x23 => Ok(TrapCodes::TrapIn),
+            0x24 => Ok(TrapCodes::TrapPutsP),
+            0x25 => Ok(TrapCodes::TrapHalt),
+            _ => Err(()),
+        }
+    }
+}
+#[derive(Debug)]
 enum Instructions {
     BR = 0,
     ADD,
@@ -73,11 +103,11 @@ enum ConditionalFlags {
     Negative = 1 << 2, // N
 }
 
-pub fn vm(argc: i32, _argv: Vec<String>) {
-    if argc < 2 {
+pub fn vm() {
+    /*     if argc < 2 {
         println!("lc3 [image-file1] ...");
         std::process::exit(2);
-    }
+    } */
     /*
     for arg in argv {
         println!("arg: {}", arg);
@@ -87,8 +117,30 @@ pub fn vm(argc: i32, _argv: Vec<String>) {
         }
     } */
 
-    let memory: Memory = [0; MEMORY_MAX];
+    let mut memory: Memory = [0; MEMORY_MAX];
     let mut registers: [u16; 10] = [0; Registers::RTotalCount as usize];
+
+    let f = File::open("./2048.obj").expect("couldn't open file");
+    let mut f = BufReader::new(f);
+
+    let base_address = f.read_u16::<BigEndian>().expect("error");
+
+    let mut address = base_address as usize;
+
+    loop {
+        match f.read_u16::<BigEndian>() {
+            Ok(instruction) => {
+                memory[address] = instruction;
+                address += 1
+            }
+            Err(error) => {
+                if error.kind() == std::io::ErrorKind::UnexpectedEof {
+                    println!("File read")
+                }
+                break;
+            }
+        }
+    }
 
     registers[Registers::RConditional as usize] = ConditionalFlags::Zero as u16;
 
@@ -107,25 +159,66 @@ pub fn vm(argc: i32, _argv: Vec<String>) {
 
         let instruction_kind = Instructions::try_from(op_code);
 
+        println!("Instruction:{:?} ", instruction_kind);
+
         match instruction_kind {
             Ok(Instructions::ADD) => add(instruction, &mut registers),
-            Ok(Instructions::AND) => {}
-            Ok(Instructions::NOT) => {}
+            Ok(Instructions::AND) => and(instruction, &mut registers),
+            Ok(Instructions::NOT) => not(instruction, &mut registers),
             Ok(Instructions::BR) => branch(instruction, &mut registers),
             Ok(Instructions::JMP) => jump(instruction, &mut registers),
             Ok(Instructions::JSR) => jump_register(instruction, &mut registers),
             Ok(Instructions::LD) => load(instruction, &mut registers, &memory),
             Ok(Instructions::LDI) => load_indirect(instruction, &mut registers, &memory),
-            Ok(Instructions::LDR) => {}
-            Ok(Instructions::LEA) => {}
-            Ok(Instructions::ST) => {}
-            Ok(Instructions::STI) => {}
-            Ok(Instructions::STR) => {}
-            Ok(Instructions::TRAP) => {}
+            Ok(Instructions::LDR) => load_register(instruction, &mut registers, &memory),
+            Ok(Instructions::LEA) => load_effective_address(instruction, &mut registers, &memory),
+            Ok(Instructions::ST) => store(instruction, &registers, &mut memory),
+            Ok(Instructions::STI) => store_indirect(instruction, &registers, &mut memory),
+            Ok(Instructions::STR) => store_register(instruction, &registers, &mut memory),
+            Ok(Instructions::TRAP) => trap(instruction, &mut registers, &memory),
             _ => {
                 println!("bad opcode");
                 std::process::exit(1);
             }
+        }
+        print_registers(&registers);
+        registers[Registers::RProgramCounter as usize] += 1;
+    }
+}
+
+fn trap(instruction: u16, registers: &mut [u16; 10], memory: &Memory) {
+    registers[Registers::R7 as usize] = registers[Registers::RProgramCounter as usize];
+
+    match TrapCodes::try_from(instruction & 0xFF) {
+        Ok(TrapCodes::TrapGetC) => {
+            let mut stdin_handle = stdin().lock();
+            let mut byte = [0_u8];
+            stdin_handle.read_exact(&mut byte).unwrap();
+
+            registers[Registers::R0 as usize] = byte[0] as u16;
+            update_flags(Registers::R0 as u16, registers)
+        }
+        Ok(TrapCodes::TrapOut) => {
+            let char = registers[Registers::R0 as usize];
+            print!("{}", char);
+        }
+        Ok(TrapCodes::TrapPuts) => {
+            let mut address = registers[Registers::R0 as usize];
+            loop {
+                let char = memory[address as usize];
+                if char == 0 {
+                    break;
+                }
+                print!("{}", char);
+                address + 1;
+            }
+        }
+        Ok(TrapCodes::TrapIn) => {}
+        Ok(TrapCodes::TrapPutsP) => {}
+        Ok(TrapCodes::TrapHalt) => {}
+        Err(_) => {
+            println!("bad trap code");
+            std::process::exit(1);
         }
     }
 }
@@ -143,6 +236,29 @@ pub fn add(instruction: u16, registers: &mut [u16; 10]) {
         registers[r0 as usize] = registers[r1 as usize] + registers[r2 as usize];
     }
 
+    update_flags(r0, registers);
+}
+
+fn and(instruction: u16, registers: &mut [u16; 10]) {
+    let r0 = (instruction >> 9) & 0x7;
+    let r1 = (instruction >> 6) & 0x7;
+    let imm_flag = (instruction >> 5) & 0x1;
+
+    if imm_flag == 1 {
+        let imm5 = sign_extended(instruction & 0x1F, 5);
+        registers[r0 as usize] = registers[r1 as usize] & imm5;
+    } else {
+        let r2 = instruction & 0x7;
+        registers[r0 as usize] = registers[r1 as usize] & registers[r2 as usize];
+    }
+    update_flags(r0, registers);
+}
+
+fn not(instruction: u16, registers: &mut [u16; 10]) {
+    let r0 = (instruction >> 9) & 0x7;
+    let r1 = (instruction >> 6) & 0x7;
+
+    registers[r0 as usize] = !registers[r1 as usize];
     update_flags(r0, registers);
 }
 
@@ -198,6 +314,49 @@ fn load_indirect(instruction: u16, registers: &mut [u16; 10], memory: &Memory) {
     update_flags(target_register, registers)
 }
 
+fn load_register(instruction: u16, registers: &mut [u16; 10], memory: &Memory) {
+    let target_register: u16 = (instruction >> 9) & 0x7;
+    let base_register: u16 = (instruction >> 6) & 0x7;
+    let offset = sign_extended(instruction & 0x3F, 6);
+
+    registers[target_register as usize] =
+        memory[(registers[base_register as usize] as usize) + (offset as usize)];
+
+    update_flags(target_register, registers)
+}
+
+fn load_effective_address(instruction: u16, registers: &mut [u16; 10], memory: &Memory) {
+    let target_register = (instruction >> 9) & 0x7;
+    let pc_offset = sign_extended(instruction & 0x1FF, 9);
+
+    registers[target_register as usize] =
+        registers[Registers::RProgramCounter as usize] + pc_offset;
+
+    update_flags(target_register, registers)
+}
+
+fn store(instruction: u16, registers: &[u16; 10], memory: &mut Memory) {
+    let target_register = (instruction >> 9) & 0x7;
+    let pc_offset = sign_extended(instruction & 0x1FF, 9);
+    memory[registers[Registers::RProgramCounter as usize] as usize + (pc_offset as usize)] =
+        registers[target_register as usize]
+}
+
+fn store_indirect(instruction: u16, registers: &[u16; 10], memory: &mut Memory) {
+    let target_register = (instruction >> 9) & 0x7;
+    let pc_offset = sign_extended(instruction & 0x1FF, 9);
+
+    memory[memory[registers[Registers::RProgramCounter as usize] as usize + pc_offset as usize]
+        as usize] = registers[target_register as usize]
+}
+
+fn store_register(instruction: u16, registers: &[u16; 10], memory: &mut Memory) {
+    let r0 = (instruction >> 9) & 0x7;
+    let r1 = (instruction >> 6) & 0x7;
+    let offset = sign_extended(instruction & 0x3F, 6);
+    memory[registers[r1 as usize] as usize + offset as usize] = registers[r0 as usize];
+}
+
 fn sign_extended(x: u16, bit_count: u16) -> u16 {
     if (x >> (bit_count - 1)) & 1 == 1 {
         x | (0xFFFF << bit_count)
@@ -231,7 +390,7 @@ pub fn print_registers(registers: &[u16; 10]) {
 }
 
 fn main() {
-    println!("Hello, world!");
+    vm()
 }
 
 #[cfg(test)]
@@ -363,6 +522,28 @@ mod tests {
         assert_eq!(
             registers[Registers::RConditional as usize],
             ConditionalFlags::Positive as u16
+        );
+    }
+
+    #[test]
+    fn test_load_register() {
+        let instruction = 0b0110_010_000_0000100;
+
+        let mut registers: [u16; 10] = [0; Registers::RTotalCount as usize];
+        let memory: [u16; 1 << 16] = [0; 1 << 16];
+
+        registers[Registers::R2 as usize] = 1 << 8;
+
+        load_register(instruction, &mut registers, &memory);
+
+        if DEBUG_PRINT {
+            print_registers(&registers);
+        }
+
+        assert_eq!(registers[Registers::R0 as usize], memory[1 << 8]);
+        assert_eq!(
+            registers[Registers::RConditional as usize],
+            ConditionalFlags::Zero as u16
         );
     }
 }
