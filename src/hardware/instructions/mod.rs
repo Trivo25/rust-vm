@@ -3,8 +3,11 @@ use self::conditional_flags::ConditionalFlags;
 use super::registers::Registers;
 
 pub mod add;
+pub mod and;
 pub mod branch;
 pub mod conditional_flags;
+pub mod res;
+pub mod rti;
 #[derive(Debug)]
 pub enum Instructions {
     BR = 0,
