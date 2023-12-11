@@ -31,8 +31,8 @@ impl Registers {
         }
     }
 
-    pub fn update(&mut self, index: u16, value: u16) {
-        match index {
+    pub fn update(&mut self, register_index: u16, value: u16) {
+        match register_index {
             0 => self.r0 = value,
             1 => self.r1 = value,
             2 => self.r2 = value,
@@ -55,8 +55,8 @@ impl Registers {
         self.update(9, value as u16)
     }
 
-    pub fn read(&self, index: u16) -> u16 {
-        match index {
+    pub fn read(&self, register: u16) -> u16 {
+        match register {
             0 => self.r0,
             1 => self.r1,
             2 => self.r2,
@@ -69,5 +69,32 @@ impl Registers {
             9 => self.cond,
             _ => panic!("Invalid register entry"),
         }
+    }
+
+    pub fn read_cond_flag(&self) -> ConditionalFlags {
+        match self.cond {
+            1 => ConditionalFlags::Positive,
+            2 => ConditionalFlags::Zero,
+            4 => ConditionalFlags::Negative,
+            _ => panic!("Invalid conditional flag entry"),
+        }
+    }
+
+    pub fn read_program_counter(&self) -> u16 {
+        self.pc
+    }
+
+    pub fn pretty_print(&self) {
+        println!("Registers:");
+        println!("R0: 0x{:04X}", self.r0);
+        println!("R1: 0x{:04X}", self.r1);
+        println!("R2: 0x{:04X}", self.r2);
+        println!("R3: 0x{:04X}", self.r3);
+        println!("R4: 0x{:04X}", self.r4);
+        println!("R5: 0x{:04X}", self.r5);
+        println!("R6: 0x{:04X}", self.r6);
+        println!("R7: 0x{:04X}", self.r7);
+        println!("PC: 0x{:04X}", self.pc);
+        println!("COND: 0x{:04X}", self.cond);
     }
 }

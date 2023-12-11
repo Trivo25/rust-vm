@@ -3,6 +3,7 @@ use self::conditional_flags::ConditionalFlags;
 use super::registers::Registers;
 
 pub mod add;
+pub mod branch;
 pub mod conditional_flags;
 #[derive(Debug)]
 pub enum Instructions {
