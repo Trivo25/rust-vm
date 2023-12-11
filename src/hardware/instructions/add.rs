@@ -23,8 +23,6 @@ The second branch is the add immediate branch, which adds the value of a registe
 |---|---|---|---|---|
 | 4bit  | 3bit  | 3bit  | 1bit  | 5bit  |
 |  0001  | DR  | SR1  | 1  | imm5  |
-
-
 */
 pub fn add(instruction: u16, registers: &mut Registers) {
     let destination_register = (instruction >> 9) & 0x7;

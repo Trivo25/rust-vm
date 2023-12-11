@@ -27,7 +27,7 @@ impl Registers {
             r6: 0,
             r7: 0,
             pc: PROGRAM_COUNTER_START,
-            cond: 0,
+            cond: ConditionalFlags::Zero as u16,
         }
     }
 
