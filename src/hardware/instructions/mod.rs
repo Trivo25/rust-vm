@@ -6,6 +6,8 @@ pub mod add;
 pub mod and;
 pub mod branch;
 pub mod conditional_flags;
+pub mod jump;
+pub mod not;
 pub mod res;
 pub mod rti;
 #[derive(Debug)]
