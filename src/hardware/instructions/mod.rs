@@ -7,6 +7,7 @@ pub mod and;
 pub mod branch;
 pub mod conditional_flags;
 pub mod jump;
+pub mod jump_register;
 pub mod not;
 pub mod res;
 pub mod rti;
