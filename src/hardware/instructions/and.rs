@@ -50,6 +50,6 @@ mod tests {
 
         registers.pretty_print();
 
-        assert_eq!(registers.read(0x000), 0b101 & sign_extended(5, 5));
+        assert_eq!(registers.read(0x000), 4 & sign_extended(5, 5));
     }
 }
