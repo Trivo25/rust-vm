@@ -5,7 +5,7 @@ use super::{sign_extended, update_flags};
 /**
 Load value from an address stored in memory into a register.
 */
-pub fn ldi(instruction: u16, registers: &mut Registers, memory: &Memory) {
+pub fn ldi(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
     let destination_register = (instruction >> 9) & 0x7;
     let offset = sign_extended(instruction & 0x1FF, 9);
 
@@ -33,7 +33,7 @@ mod tests {
 
         memory.write(sign_extended(0b000000001, 9) + pc, 0x12);
         memory.write(0x12, 0x51);
-        ldi(instruction, &mut registers, &memory);
+        ldi(instruction, &mut registers, &mut memory);
 
         registers.pretty_print();
 

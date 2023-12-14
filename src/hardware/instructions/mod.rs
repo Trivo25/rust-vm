@@ -28,14 +28,14 @@ pub fn execute_instruction(instruction: u16, registers: &mut Registers, memory: 
         Ok(Instructions::BR) => br::br(instruction, registers),
         Ok(Instructions::JMP) => jmp::jmp(instruction, registers),
         Ok(Instructions::JSR) => jsr::jsr(instruction, registers),
-        Ok(Instructions::LD) => ld::ld(instruction, registers, &memory),
-        Ok(Instructions::LDI) => ldi::ldi(instruction, registers, &memory),
-        Ok(Instructions::LDR) => ldr::ldr(instruction, registers, &memory),
+        Ok(Instructions::LD) => ld::ld(instruction, registers, memory),
+        Ok(Instructions::LDI) => ldi::ldi(instruction, registers, memory),
+        Ok(Instructions::LDR) => ldr::ldr(instruction, registers, memory),
         Ok(Instructions::LEA) => lea::lea(instruction, registers),
         Ok(Instructions::ST) => st::st(instruction, registers, memory),
         Ok(Instructions::STI) => sti::sti(instruction, registers, memory),
         Ok(Instructions::STR) => str::str(instruction, registers, memory),
-        Ok(Instructions::TRAP) => trap::trap(instruction, registers, &memory),
+        Ok(Instructions::TRAP) => trap::trap(instruction, registers, memory),
         _ => panic!("Unknown opcode: {}", opcode),
     }
 }

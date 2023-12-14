@@ -5,14 +5,14 @@ use crate::hardware::{
     registers::Registers,
 };
 
-pub fn trap(instruction: u16, registers: &mut Registers, memory: &Memory) {
+pub fn trap(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
     let trap_code = instruction & 0xFF;
 
     match trap_code {
         0x20 => trap_getc(registers),
         0x21 => trap_out(registers),
         0x22 => trap_puts(registers, memory),
-        0x23 => trap_in(registers, memory),
+        0x23 => trap_in(registers),
         0x24 => trap_putsp(registers, memory),
         0x25 => trap_halt(),
         _ => panic!("Unknown trap code: {}", trap_code),
@@ -31,7 +31,7 @@ fn trap_out(registers: &mut Registers) {
     print!("{}", c as u8 as char);
 }
 
-fn trap_puts(registers: &mut Registers, memory: &Memory) {
+fn trap_puts(registers: &mut Registers, memory: &mut Memory) {
     let mut index = registers.read(0);
     let mut c = memory.read(index);
 
@@ -43,7 +43,7 @@ fn trap_puts(registers: &mut Registers, memory: &Memory) {
     io::stdout().flush().expect("Error flushing output");
 }
 
-fn trap_in(registers: &mut Registers, memory: &Memory) {
+fn trap_in(registers: &mut Registers) {
     print!("Enter a  character : ");
     io::stdout().flush().expect("failed to flush");
     let char = std::io::stdin()
@@ -55,7 +55,7 @@ fn trap_in(registers: &mut Registers, memory: &Memory) {
     registers.update(0, char);
 }
 
-fn trap_putsp(registers: &mut Registers, memory: &Memory) {
+fn trap_putsp(registers: &mut Registers, memory: &mut Memory) {
     // Putsp
     let mut index = registers.read(0);
     let mut c = memory.read(index);
@@ -98,7 +98,7 @@ mod tests {
         memory.write(0x3004, 'o' as u16);
         memory.write(0x3005, 0x0000);
 
-        trap_puts(&mut registers, &memory);
+        trap_puts(&mut registers, &mut memory);
 
         registers.pretty_print()
     }

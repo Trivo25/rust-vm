@@ -5,7 +5,7 @@ use super::{add, sign_extended, update_flags};
 /**
 Load from memory into a register
 */
-pub fn ld(instruction: u16, registers: &mut Registers, memory: &Memory) {
+pub fn ld(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
     let destination_register = (instruction >> 9) & 0x7;
     let offset = sign_extended(instruction & 0x1FF, 9);
     let pc = registers.read_program_counter();
@@ -33,7 +33,7 @@ mod tests {
 
         memory.write(registers.read_program_counter() + 0b000110101, 0x1234);
 
-        ld(instruction, &mut registers, &memory);
+        ld(instruction, &mut registers, &mut memory);
 
         registers.pretty_print();
 

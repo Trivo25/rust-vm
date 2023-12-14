@@ -1,6 +1,12 @@
+use std::borrow::BorrowMut;
+use std::fs::File;
+use std::io::BufReader;
+
+use byteorder::{BigEndian, ReadBytesExt};
+
 use super::instructions::execute_instruction;
 use super::memory::Memory;
-use super::registers::Registers;
+use super::registers::{self, Registers};
 
 pub struct VirtualMachine {
     pub memory: Memory,
@@ -23,19 +29,44 @@ impl VirtualMachine {
         self.registers.read(register_index)
     }
 
-    fn get_registers(&self) -> &Registers {
-        &mut self.registers
-    }
-
     pub fn execute_program(&mut self) {
         while (self.registers.read_program_counter() as usize) < (self.memory.memory_max) {
             let next_instruction = self.read_memory(self.registers.read_program_counter());
 
             self.registers.increment_program_counter();
 
-            let mut reg = self.get_registers();
+            let registers = &mut self.registers;
+            let memory = &mut self.memory;
 
-            execute_instruction(next_instruction, reg, &self.memory)
+            execute_instruction(next_instruction, registers, memory);
+        }
+    }
+
+    pub fn load_program(&mut self, path: String) {
+        let f = File::open(path).unwrap();
+        let mut file_buffer = BufReader::new(f);
+
+        let base_address = file_buffer
+            .read_u16::<BigEndian>()
+            .expect("Error reading file");
+
+        let mut address = base_address;
+
+        loop {
+            match file_buffer.read_u16::<BigEndian>() {
+                Ok(instruction) => {
+                    self.memory.write(address, instruction);
+                    address += 1;
+                }
+                Err(e) => {
+                    if e.kind() == std::io::ErrorKind::UnexpectedEof {
+                        println!("Finished loading program")
+                    } else {
+                        println!("failed: {}", e);
+                    }
+                    break;
+                }
+            }
         }
     }
 }

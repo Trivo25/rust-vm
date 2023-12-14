@@ -5,7 +5,7 @@ use super::{add, sign_extended, update_flags};
 /**
 Load from memory into a register from address in BaseR + offset
 */
-pub fn ldr(instruction: u16, registers: &mut Registers, memory: &Memory) {
+pub fn ldr(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
     let destination_register = (instruction >> 9) & 0x7;
     let base_register = (instruction >> 6) & 0x7;
     let offset = sign_extended(instruction & 0x3F, 6);
@@ -34,7 +34,7 @@ mod tests {
 
         memory.write(sign_extended(0b110101, 6) + 0x5, 0x55);
 
-        ldr(instruction, &mut registers, &memory);
+        ldr(instruction, &mut registers, &mut memory);
 
         registers.pretty_print();
 
