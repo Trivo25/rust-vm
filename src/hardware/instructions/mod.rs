@@ -1,4 +1,4 @@
-use super::registers::Registers;
+use super::{memory::Memory, registers::Registers};
 
 pub mod add;
 pub mod and;
@@ -16,6 +16,30 @@ pub mod st;
 pub mod sti;
 pub mod str;
 pub mod trap;
+
+pub fn execute_instruction(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
+    let opcode = instruction >> 12;
+    let instruction_kind = Instructions::try_from(opcode);
+
+    match instruction_kind {
+        Ok(Instructions::ADD) => br::br(instruction, registers),
+        Ok(Instructions::AND) => and::and(instruction, registers),
+        Ok(Instructions::NOT) => not::not(instruction, registers),
+        Ok(Instructions::BR) => br::br(instruction, registers),
+        Ok(Instructions::JMP) => jmp::jmp(instruction, registers),
+        Ok(Instructions::JSR) => jsr::jsr(instruction, registers),
+        Ok(Instructions::LD) => ld::ld(instruction, registers, &memory),
+        Ok(Instructions::LDI) => ldi::ldi(instruction, registers, &memory),
+        Ok(Instructions::LDR) => ldr::ldr(instruction, registers, &memory),
+        Ok(Instructions::LEA) => lea::lea(instruction, registers),
+        Ok(Instructions::ST) => st::st(instruction, registers, memory),
+        Ok(Instructions::STI) => sti::sti(instruction, registers, memory),
+        Ok(Instructions::STR) => str::str(instruction, registers, memory),
+        Ok(Instructions::TRAP) => trap::trap(instruction, registers, &memory),
+        _ => panic!("Unknown opcode: {}", opcode),
+    }
+}
+
 #[derive(Debug)]
 pub enum Instructions {
     BR = 0,

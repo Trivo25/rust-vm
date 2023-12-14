@@ -84,6 +84,10 @@ impl Registers {
         self.pc
     }
 
+    pub fn increment_program_counter(&mut self) {
+        self.pc += 1;
+    }
+
     pub fn pretty_print(&self) {
         println!("Registers:");
         println!("R0: 0x{:04X}", self.r0);
