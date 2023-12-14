@@ -1,11 +1,8 @@
-use self::conditional_flags::ConditionalFlags;
-
 use super::registers::Registers;
 
 pub mod add;
 pub mod and;
 pub mod br;
-pub mod conditional_flags;
 pub mod jmp;
 pub mod jsr;
 pub mod ld;
@@ -81,4 +78,10 @@ pub fn update_flags(r: u16, registers: &mut Registers) {
     } else {
         registers.update_cond_flag(ConditionalFlags::Positive);
     }
+}
+
+pub enum ConditionalFlags {
+    Positive = 1 << 0, // P
+    Zero = 1 << 1,     // Z
+    Negative = 1 << 2, // N
 }

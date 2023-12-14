@@ -1,4 +1,4 @@
-use super::instructions::conditional_flags::ConditionalFlags;
+use super::instructions::ConditionalFlags;
 
 const PROGRAM_COUNTER_START: u16 = 0x3000;
 

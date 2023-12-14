@@ -27,7 +27,7 @@ pub fn br(instruction: u16, registers: &mut Registers) {
 
 #[cfg(test)]
 mod tests {
-    use crate::hardware::instructions::conditional_flags::ConditionalFlags;
+    use crate::hardware::instructions::ConditionalFlags;
 
     use super::*;
 
