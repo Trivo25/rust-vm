@@ -6,7 +6,7 @@ pub struct Memory {
     memory: [u16; MEMORY_MAX],
     pub memory_max: usize,
 }
-enum MemoryMappedRegister {
+pub enum MemoryMappedRegister {
     MR_KBSR = 0xFE00, /* keyboard status */
     MR_KBDR = 0xFE02, /* keyboard data */
 }

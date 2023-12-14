@@ -1,6 +1,6 @@
 use crate::hardware::{memory::Memory, registers::Registers};
 
-use super::{add, sign_extended, update_flags};
+use super::sign_extended;
 
 /**
 Store content of register into an address in memory specified by the offset and program counter.
@@ -10,10 +10,10 @@ pub fn st(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
     let pc = registers.read_program_counter();
     let offset = sign_extended(instruction & 0x1FF, 9);
 
-    let address: u16 = pc + offset;
+    let address = (pc as u32) + (offset as u32);
     let value = registers.read(source_register);
 
-    memory.write(address, value);
+    memory.write(address as u16, value);
 }
 
 #[cfg(test)]

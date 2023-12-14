@@ -11,10 +11,10 @@ pub fn str(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
 
     let offset = sign_extended(instruction & 0x3F, 6);
 
-    let address: u16 = registers.read(base_register) + offset;
+    let address: u32 = registers.read(base_register) as u32 + offset as u32;
     let value = registers.read(source_register);
 
-    memory.write(address, value);
+    memory.write(address as u16, value);
 }
 
 #[cfg(test)]

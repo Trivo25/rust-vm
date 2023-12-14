@@ -1,4 +1,3 @@
-use std::borrow::BorrowMut;
 use std::fs::File;
 use std::io::BufReader;
 
@@ -6,7 +5,7 @@ use byteorder::{BigEndian, ReadBytesExt};
 
 use super::instructions::execute_instruction;
 use super::memory::Memory;
-use super::registers::{self, Registers};
+use super::registers::Registers;
 
 pub struct VirtualMachine {
     pub memory: Memory,
@@ -42,7 +41,7 @@ impl VirtualMachine {
         }
     }
 
-    pub fn load_program(&mut self, path: String) {
+    pub fn load_program(&mut self, path: &str) {
         let f = File::open(path).unwrap();
         let mut file_buffer = BufReader::new(f);
 
