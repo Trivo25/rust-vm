@@ -9,16 +9,14 @@ pub fn lea(instruction: u16, registers: &mut Registers) {
     let destination_register = (instruction >> 9) & 0x7;
     let offset = sign_extended(instruction & 0x1FF, 9);
 
-    let address = offset + registers.read_program_counter();
+    let address = (offset as u32) + (registers.read_program_counter() as u32);
 
-    registers.update(destination_register, address);
+    registers.update(destination_register, address as u16);
     update_flags(destination_register, registers)
 }
 
 #[cfg(test)]
 mod tests {
-
-    use crate::hardware::memory;
 
     use super::*;
 

@@ -1,3 +1,5 @@
+use std::os::unix::process;
+
 use crate::hardware::registers::Registers;
 
 use super::sign_extended;
@@ -18,11 +20,11 @@ pub fn br(instruction: u16, registers: &mut Registers) {
     let pc_offset = sign_extended(instruction & 0x1FF, 9);
     let cond_flag = (instruction >> 9) & 0x7;
 
-    let current_flag = registers.read_cond_flag() as u16;
-
-    if cond_flag == current_flag {
-        registers.update_program_counter(registers.read_program_counter() + pc_offset);
+    if cond_flag & registers.read_cond_flag() as u16 != 0 {
+        let value = (registers.read_program_counter() as u32) + (pc_offset as u32);
+        registers.update_program_counter(value as u16);
     }
+    //std::process::exit(0);
 }
 
 #[cfg(test)]

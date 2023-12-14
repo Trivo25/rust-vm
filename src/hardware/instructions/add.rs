@@ -32,12 +32,15 @@ pub fn add(instruction: u16, registers: &mut Registers) {
 
     if imm_flag == 1 {
         let imm5 = sign_extended(instruction & 0x1F, 5);
-        registers.update(destination_register, registers.read(source_1) + imm5);
+        registers.update(
+            destination_register,
+            (registers.read(source_1) as u32 + imm5 as u32) as u16,
+        );
     } else {
         let source_2: u16 = instruction & 0x7;
         registers.update(
             destination_register,
-            registers.read(source_1) + registers.read(source_2),
+            (registers.read(source_1) as u32 + registers.read(source_2) as u32) as u16,
         );
     }
 

@@ -20,7 +20,7 @@ pub mod trap;
 pub fn execute_instruction(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
     let opcode = instruction >> 12;
     let instruction_kind = Instructions::try_from(opcode);
-
+    println!("Executing instruction: {:?}", instruction_kind);
     match instruction_kind {
         Ok(Instructions::ADD) => br::br(instruction, registers),
         Ok(Instructions::AND) => and::and(instruction, registers),
@@ -36,6 +36,7 @@ pub fn execute_instruction(instruction: u16, registers: &mut Registers, memory: 
         Ok(Instructions::STI) => sti::sti(instruction, registers, memory),
         Ok(Instructions::STR) => str::str(instruction, registers, memory),
         Ok(Instructions::TRAP) => trap::trap(instruction, registers, memory),
+        Ok(Instructions::RTI) => rti::rti(instruction, registers),
         _ => panic!("Unknown opcode: {}", opcode),
     }
 }

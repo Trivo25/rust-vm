@@ -10,9 +10,9 @@ pub fn ldr(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
     let base_register = (instruction >> 6) & 0x7;
     let offset = sign_extended(instruction & 0x3F, 6);
 
-    let address = registers.read(base_register) + offset;
+    let address = registers.read(base_register) as u32 + offset as u32;
 
-    registers.update(destination_register, memory.read(address));
+    registers.update(destination_register, memory.read(address as u16));
     update_flags(destination_register, registers)
 }
 

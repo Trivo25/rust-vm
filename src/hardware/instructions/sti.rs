@@ -10,7 +10,7 @@ pub fn sti(instruction: u16, registers: &mut Registers, memory: &mut Memory) {
     let pc = registers.read_program_counter();
     let offset = sign_extended(instruction & 0x1FF, 9);
 
-    let address: u16 = memory.read(pc + offset);
+    let address: u16 = memory.read((pc as u32 + offset as u32) as u16);
     let value = registers.read(source_register);
 
     memory.write(address, value);

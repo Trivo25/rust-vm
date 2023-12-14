@@ -12,7 +12,9 @@ pub fn jsr(instruction: u16, registers: &mut Registers) {
     if long_flag == 1 {
         // jsr
         let offset = sign_extended(instruction & 0x7FF, 11);
-        registers.update_program_counter(registers.read_program_counter() + offset);
+        registers.update_program_counter(
+            (registers.read_program_counter() as u32 + offset as u32) as u16,
+        );
     } else {
         // jsrr
         let base_register = (instruction >> 6) & 0x7;
