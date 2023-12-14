@@ -5,7 +5,7 @@ use super::sign_extended;
 /**
 Jump to a location in memory.
 */
-pub fn jump(instruction: u16, registers: &mut Registers) {
+pub fn jmp(instruction: u16, registers: &mut Registers) {
     let base_register = (instruction >> 6) & 0x7;
     let base_register_value = registers.read(base_register);
 
@@ -25,7 +25,7 @@ mod tests {
 
         registers.update(0b001, 0x555);
 
-        jump(instruction, &mut registers);
+        jmp(instruction, &mut registers);
 
         registers.pretty_print();
 

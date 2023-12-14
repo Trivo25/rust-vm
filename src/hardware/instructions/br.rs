@@ -14,7 +14,7 @@ The branch opcode is 0000, which is the first 4 bits of the instruction.
 The branch instruction is used to branch to a different location in memory if a certain condition is met.
 n, z, and p are the condition flags, and PCOffset9 is the offset to branch to.
 */
-pub fn branch(instruction: u16, registers: &mut Registers) {
+pub fn br(instruction: u16, registers: &mut Registers) {
     let pc_offset = sign_extended(instruction & 0x1FF, 9);
     let cond_flag = (instruction >> 9) & 0x7;
 
@@ -39,7 +39,7 @@ mod tests {
 
         registers.update_cond_flag(ConditionalFlags::Negative);
 
-        branch(instruction, &mut registers);
+        br(instruction, &mut registers);
 
         registers.pretty_print();
 
@@ -54,7 +54,7 @@ mod tests {
 
         registers.update_cond_flag(ConditionalFlags::Positive);
 
-        branch(instruction, &mut registers);
+        br(instruction, &mut registers);
 
         registers.pretty_print();
 
@@ -69,7 +69,7 @@ mod tests {
 
         registers.update_cond_flag(ConditionalFlags::Zero);
 
-        branch(instruction, &mut registers);
+        br(instruction, &mut registers);
 
         registers.pretty_print();
 

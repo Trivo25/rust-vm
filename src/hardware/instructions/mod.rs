@@ -4,13 +4,18 @@ use super::registers::Registers;
 
 pub mod add;
 pub mod and;
-pub mod branch;
+pub mod br;
 pub mod conditional_flags;
-pub mod jump;
-pub mod jump_register;
+pub mod jmp;
+pub mod jsr;
+pub mod ld;
+pub mod ldi;
+pub mod ldr;
+pub mod lea;
 pub mod not;
 pub mod res;
 pub mod rti;
+
 #[derive(Debug)]
 pub enum Instructions {
     BR = 0,

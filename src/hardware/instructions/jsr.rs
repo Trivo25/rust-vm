@@ -5,7 +5,7 @@ use super::sign_extended;
 /**
 Jump to a location in memory based on the value of a register.
 */
-pub fn jump_register(instruction: u16, registers: &mut Registers) {
+pub fn jsr(instruction: u16, registers: &mut Registers) {
     let long_flag = (instruction >> 11) & 0x1;
     registers.update(7, registers.read_program_counter());
 
@@ -31,7 +31,7 @@ mod tests {
 
         let mut registers = Registers::initial();
 
-        jump_register(instruction, &mut registers);
+        jsr(instruction, &mut registers);
 
         registers.pretty_print();
 
@@ -46,7 +46,7 @@ mod tests {
 
         registers.update(0b010, 1234);
 
-        jump_register(instruction, &mut registers);
+        jsr(instruction, &mut registers);
 
         registers.pretty_print();
 
