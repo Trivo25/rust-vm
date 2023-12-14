@@ -17,6 +17,7 @@ pub mod res;
 pub mod rti;
 pub mod st;
 pub mod sti;
+pub mod str;
 
 #[derive(Debug)]
 pub enum Instructions {
