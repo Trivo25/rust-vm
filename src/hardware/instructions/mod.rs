@@ -15,7 +15,7 @@ pub mod rti;
 pub mod st;
 pub mod sti;
 pub mod str;
-
+pub mod trap;
 #[derive(Debug)]
 pub enum Instructions {
     BR = 0,
